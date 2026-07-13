@@ -12,28 +12,30 @@ services:
       RABBITMQ_DEFAULT_PASS: guest
 
   mongodb:
-    image: mongo:7.0
+    image: mongo:latest
     container_name: notification_mongodb
     ports:
       - "27017:27017"
     environment:
-      MONGO_INITDB_ROOT_USERNAME: rootuser
-      MONGO_INITDB_ROOT_PASSWORD: rootpassword
-    command: ["--replSet", "rs0", "--bind_ip_all"]
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: secret_password
+      MONGO_INITDB_DATABASE: notification_db
+    volumes:
+      - mongo_data:/data/db
+    entrypoint:
+      - bash
+      - -c
+      - |
+        openssl rand -base64 756 > /data/db/keyfile
+        chmod 400 /data/db/keyfile
+        chown 999:999 /data/db/keyfile
+        exec docker-entrypoint.sh mongod --replSet rs0 --keyFile /data/db/keyfile --bind_ip_all
+    # Healthcheck container
     healthcheck:
-      test: |
-        mongosh -u rootuser -p rootpassword --authenticationDatabase admin --eval "
-        try {
-          if (rs.status().ok === 1) quit(0);
-        } catch (e) {
-          if (rs.initiate({_id: 'rs0', members: [{_id: 0, host: 'localhost:27017'}]}).ok === 1) quit(0);
-        }
-        quit(1);
-        "
+      test: ["CMD", "mongosh", "--username", "root", "--password", "secret_password", "--authenticationDatabase", "admin", "--eval", "db.adminCommand('ping')"]
       interval: 5s
       timeout: 5s
-      retries: 5
-      start_period: 5s
+      retries: 3
 
   app:
     build: .
@@ -45,3 +47,6 @@ services:
         condition: service_started
     env_file:
       - .env
+
+volumes:
+  mongo_data:
