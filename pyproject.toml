@@ -1,0 +1,30 @@
+[project]
+name = "notification-service"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "Artyom Dordyuk",email = "a.dorduke@gmail.com"}
+]
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "pydantic (>=2.13.4,<3.0.0)",
+    "pydantic-settings (>=2.14.2,<3.0.0)",
+    "pymongo (>=4.17.0,<5.0.0)",
+    "pika (>=1.4.1,<2.0.0)",
+    "boto3 (>=1.43.40,<2.0.0)",
+    "email-validator (>=2.3.0,<3.0.0)",
+    "motor (>=3.7.1,<4.0.0)"
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[dependency-groups]
+dev = [
+    "black (>=26.5.1,<27.0.0)",
+    "isort (>=8.0.1,<9.0.0)",
+    "pre-commit (>=4.6.0,<5.0.0)"
+]
