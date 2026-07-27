@@ -1,5 +1,5 @@
 # Load environment variables
-include .env
+-include .env
 export
 
 # Phony targets definition
