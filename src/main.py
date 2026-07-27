@@ -9,7 +9,7 @@ from src.adapters.database.mongo_repository import MongoNotificationRepository
 from src.adapters.email.aws_ses import AWSSESEmailAdapter
 from src.adapters.message_broker.rabbitmq_consumer import RabbitMQConsumer
 from src.config import settings
-from src.use_cases.process_reset_password import ProcessResetPasswordUseCase
+from src.use_cases.send_reset_password_notification import SendResetPasswordNotificationUseCase
 
 # Configure logging globally
 logging.basicConfig(
@@ -35,7 +35,7 @@ def run_application():
     )
 
     # 3. Instantiate Use Case
-    use_case = ProcessResetPasswordUseCase(
+    use_case = SendResetPasswordNotificationUseCase(
         db_client=db_client,
         db_name=settings.MONGO_DB,
         db_repository=db_repository,

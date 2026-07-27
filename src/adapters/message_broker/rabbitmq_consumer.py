@@ -6,7 +6,7 @@ import pika
 from pydantic import ValidationError
 
 from src.domain.entities import ResetPasswordMessage
-from src.use_cases.process_reset_password import ProcessResetPasswordUseCase
+from src.use_cases.send_reset_password_notification import SendResetPasswordNotificationUseCase
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +18,7 @@ class RabbitMQConsumer:
             user: str,
             password: str,
             queue_name: str,
-            use_case: ProcessResetPasswordUseCase,
+            use_case: SendResetPasswordNotificationUseCase,
     ):
         """
         Setup RabbitMQ connection configuration
@@ -106,12 +106,10 @@ class RabbitMQConsumer:
 
             if failure_count >= 5:
                 # Reject message and route to DLQ after 5 failures
-                # (Отклоняем сообщение и направляем в DLQ после 5 ошибок)
                 ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
                 logger.error("Message failed 5 times. Rejected permanently to Dead Letter Queue.")
             else:
                 # Requeue message on temporary infrastructure failures
-                # (Возвращаем сообщение в очередь при сбое инфраструктуры)
                 ch.basic_nack(delivery_tag=method.delivery_tag, requeue=True)
                 logger.info(f"Message requeued with requeue=True for attempt {failure_count + 1}.")
 

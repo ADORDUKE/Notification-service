@@ -1,4 +1,4 @@
-# src/use_cases/process_reset_password.py
+# src/use_cases/send_reset_password_notification.py
 import logging
 
 from pymongo import MongoClient
@@ -9,7 +9,7 @@ from src.ports.email import EmailPort
 
 logger = logging.getLogger(__name__)
 
-class ProcessResetPasswordUseCase:
+class SendResetPasswordNotificationUseCase:
     def __init__(self, db_client: MongoClient, db_name: str, db_repository: DatabasePort, email_adapter: EmailPort):
         self.db_client = db_client
         self.db_name = db_name
