@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   rabbitmq:
     image: rabbitmq:3-management
@@ -49,6 +47,10 @@ services:
         condition: service_started
     env_file:
       - .env
+    environment:
+      # Override hosts for inter-container communication in Docker bridge network
+      - RABBIT_HOST=rabbitmq
+      - MONGO_URI=mongodb://${MONGO_ROOT_USER}:${MONGO_ROOT_PASSWORD}@mongodb:27017/${MONGO_DB}?authSource=admin
 
 volumes:
   mongo_data:
