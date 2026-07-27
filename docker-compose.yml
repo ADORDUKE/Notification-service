@@ -8,8 +8,9 @@ services:
       - "5672:5672"
       - "15672:15672"
     environment:
-      RABBITMQ_DEFAULT_USER: guest
-      RABBITMQ_DEFAULT_PASS: guest
+      # Inject RabbitMQ credentials from .env
+      RABBITMQ_DEFAULT_USER: ${RABBIT_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBIT_PASS}
 
   mongodb:
     image: mongo:latest
@@ -17,9 +18,10 @@ services:
     ports:
       - "27017:27017"
     environment:
-      MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: secret_password
-      MONGO_INITDB_DATABASE: notification_db
+      # Inject MongoDB credentials from .env
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
+      MONGO_INITDB_DATABASE: ${MONGO_DB}
     volumes:
       - mongo_data:/data/db
     entrypoint:
@@ -30,9 +32,9 @@ services:
         chmod 400 /data/db/keyfile
         chown 999:999 /data/db/keyfile
         exec docker-entrypoint.sh mongod --replSet rs0 --keyFile /data/db/keyfile --bind_ip_all
-    # Healthcheck container
+    # Healthcheck container dynamically using .env variables
     healthcheck:
-      test: ["CMD", "mongosh", "--username", "root", "--password", "secret_password", "--authenticationDatabase", "admin", "--eval", "db.adminCommand('ping')"]
+      test: ["CMD", "mongosh", "--username", "${MONGO_ROOT_USER}", "--password", "${MONGO_ROOT_PASSWORD}", "--authenticationDatabase", "admin", "--eval", "db.adminCommand('ping')"]
       interval: 5s
       timeout: 5s
       retries: 3

@@ -1,6 +1,9 @@
 from abc import ABC, abstractmethod
+
 from pymongo.client_session import ClientSession
+
 from src.domain.entities import ResetPasswordMessage
+
 
 class DatabasePort(ABC):
     @abstractmethod
