@@ -1,0 +1,56 @@
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: notification_rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      # Inject RabbitMQ credentials from .env
+      RABBITMQ_DEFAULT_USER: ${RABBIT_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBIT_PASS}
+
+  mongodb:
+    image: mongo:latest
+    container_name: notification_mongodb
+    ports:
+      - "27017:27017"
+    environment:
+      # Inject MongoDB credentials from .env
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
+      MONGO_INITDB_DATABASE: ${MONGO_DB}
+    volumes:
+      - mongo_data:/data/db
+    entrypoint:
+      - bash
+      - -c
+      - |
+        openssl rand -base64 756 > /data/db/keyfile
+        chmod 400 /data/db/keyfile
+        chown 999:999 /data/db/keyfile
+        exec docker-entrypoint.sh mongod --replSet rs0 --keyFile /data/db/keyfile --bind_ip_all
+    # Healthcheck container dynamically using .env variables
+    healthcheck:
+      test: ["CMD", "mongosh", "--username", "${MONGO_ROOT_USER}", "--password", "${MONGO_ROOT_PASSWORD}", "--authenticationDatabase", "admin", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+
+  app:
+    build: .
+    container_name: notification_app
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_started
+    env_file:
+      - .env
+    environment:
+      # Override hosts for inter-container communication in Docker bridge network
+      - RABBIT_HOST=rabbitmq
+      - MONGO_URI=mongodb://${MONGO_ROOT_USER}:${MONGO_ROOT_PASSWORD}@mongodb:27017/${MONGO_DB}?authSource=admin
+
+volumes:
+  mongo_data:

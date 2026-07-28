@@ -1,0 +1,68 @@
+name: CI Pipeline
+
+# Trigger pipeline on push to any branch and pull requests to main
+on:
+  push:
+    branches: [ "**" ]
+
+jobs:
+  # Job 1: Linting and static code analysis
+  lint:
+    name: Lint & Code Style Check
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout repository code
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Step 2: Install uv package manager with caching
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "latest"
+          enable-cache: true
+
+      # Step 3: Install Python and project dependencies
+      - name: Set up Python and Sync Dependencies
+        run: uv sync
+
+      # Step 4: Run Ruff linter via Makefile
+      - name: Run Linters (Ruff)
+        run: make lint
+
+  # Job 2: Build Docker Image
+  build-docker:
+    name: Build Docker Image
+    needs: lint
+    runs-on: ubuntu-latest
+
+    environment:
+      name: ${{ github.ref_name == 'main' && 'production' || 'CI' }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Generate temporary .env file from GitHub Secrets for Docker build
+      - name: Generate .env file
+        run: |
+          touch .env
+          echo "ENV=ci" >> .env
+          echo "MONGO_ROOT_USER=${{ secrets.MONGO_ROOT_USER }}" >> .env
+          echo "MONGO_ROOT_PASSWORD=${{ secrets.MONGO_ROOT_PASSWORD }}" >> .env
+          echo "MONGO_DB=${{ secrets.MONGO_DB }}" >> .env
+          echo "MONGO_URI=${{ secrets.MONGO_URI }}" >> .env
+          echo "RABBIT_HOST=${{ secrets.RABBIT_HOST }}" >> .env
+          echo "RABBIT_PORT=${{ secrets.RABBIT_PORT }}" >> .env
+          echo "RABBIT_USER=${{ secrets.RABBIT_USER }}" >> .env
+          echo "RABBIT_PASS=${{ secrets.RABBIT_PASS }}" >> .env
+          echo "QUEUE_NAME=${{ secrets.QUEUE_NAME }}" >> .env
+          echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}" >> .env
+          echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> .env
+          echo "AWS_REGION=${{ secrets.AWS_REGION }}" >> .env
+          echo "AWS_SES_SENDER=${{ secrets.AWS_SES_SENDER }}" >> .env
+
+      # Verify Docker Compose config and build image
+      - name: Build Docker Image
+        run: docker compose build
