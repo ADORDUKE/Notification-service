@@ -24,4 +24,5 @@ class Settings(BaseSettings):
     AWS_REGION: str
     AWS_SES_SENDER: str
 
+
 settings = Settings()

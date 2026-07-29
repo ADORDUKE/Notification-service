@@ -14,10 +14,4 @@ class ResetPasswordMessage(BaseModel):
     sent_at: datetime | None = None
 
     # Turn on snake_case and camelCase for import data
-    model_config = {
-        "populate_by_name": True
-    }
-
-
-
-
+    model_config = {"populate_by_name": True}
