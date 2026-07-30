@@ -22,7 +22,7 @@ class AWSSESEmailAdapter(EmailPort):
         self.sender_email = sender_email
 
         # Create async session aioboto3
-        self.client = aioboto3.Session(
+        self.session = aioboto3.Session(
             aws_access_key_id=self.aws_access_key_id,
             aws_secret_access_key=self.aws_secret_access_key,
             region_name=self.aws_region,

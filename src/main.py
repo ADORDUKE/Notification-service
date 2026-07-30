@@ -1,9 +1,9 @@
 # src/main.py
+import asyncio
 import logging
-from contextlib import asynccontextmanager
+import signal
+import sys
 
-import uvicorn
-from fastapi import FastAPI
 from motor.motor_asyncio import AsyncIOMotorClient
 
 from src.adapters.database.mongo_repository import MongoNotificationRepository
@@ -17,17 +17,12 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(na
 
 logger = logging.getLogger(__name__)
 
-consumer: RabbitMQConsumer
-db_client: AsyncIOMotorClient
 
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
+async def main():
     """
-    Manages the application lifecycle: connection start and soft shutdown
+    Main entry point for the pure async worker.
     """
-    global consumer, db_client
-    logger.info("Starting Notification-Service Worker via FastAPI...")
+    logger.info("Starting Notification-Service Async Worker...")
 
     # Initialize AsyncIOMotorClient
     db_client = AsyncIOMotorClient(settings.MONGO_URI, uuidRepresentation="standard")
@@ -59,31 +54,35 @@ async def lifespan(app: FastAPI):
     # 5. Start listening to RabbitMQ in the background
     await consumer.start_consuming()
 
-    # ---- Starting app ---
-    yield
-    # ---------------------
+    # 6. Graceful shutdown setup
+    stop_event = asyncio.Event()
 
-    # 6. Graceful shutdown
-    logger.info("Shutdown signal received, closing connections...")
+    def shutdown_handler(sig_name: str):
+        logger.info(f"Received exit signal {sig_name}, initiating graceful shutdown...")
+        stop_event.set()
+
+    # Register sys signal (ctrl+c and Docker Stop)
+    loop = asyncio.get_running_loop()
+    for sig in (signal.SIGINT, signal.SIGTERM):
+        loop.add_signal_handler(sig, lambda s=sig: shutdown_handler(s.name))
+
+    logger.info("Worker is running and waiting for messages. Press CTRL+C to stop.")
+
+    # Blocking the execution of main() until stop_event.set() is called
+    await stop_event.wait()
+
+    # 7. Cleanup
+    logger.info("Closing connection...")
     await consumer.close()
     db_client.close()
-
-
-# Initiation FastApi
-app = FastAPI(
-    lifespan=lifespan,
-    title="Notification-Service",
-    version="1.0.0",
-)
-
-
-@app.get("/health", tags=["System Health"])
-async def health_check():
-    """
-    Endpoint for health check
-    """
-    return {"status": "ok", "service": "Notification-Service"}
+    logger.info("Worker stopped successfully.")
 
 
 if __name__ == "__main__":
-    uvicorn.run("src.main:app", host="0.0.0.0", port=8000, reload=False)
+    try:
+        # Start async Event loop
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        # Backup interception for correct exit in some terminals
+        logger.info("Process interrupted manually.")
+        sys.exit(0)

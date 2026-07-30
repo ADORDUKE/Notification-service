@@ -10,11 +10,9 @@ dependencies = [
     "aioboto3>=13.1.0",
     "aio-pika>=9.4.0",
     "email-validator>=2.2.0",
-    "fastapi>=0.111.0",
     "motor>=3.5.0",
     "pydantic>=2.10.0",
     "pydantic-settings>=2.7.0",
-    "uvicorn>=0.30.0",
 ]
 
 # Development dependencies group

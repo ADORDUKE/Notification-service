@@ -1,6 +1,6 @@
 import logging
 
-from motor.motor_asyncio import AsyncIOMotorClient
+from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorClientSession
 
 from src.domain.entities import ResetPasswordMessage
 from src.ports.database import DatabasePort
@@ -19,7 +19,7 @@ class MongoNotificationRepository(DatabasePort):
         self.db = db_client[db_name]
         self.collection = self.db["notifications"]
 
-    async def save_notification(self, session: AsyncIOMotorClient, message: ResetPasswordMessage) -> None:
+    async def save_notification(self, session: AsyncIOMotorClientSession, message: ResetPasswordMessage) -> None:
         """
         Asynchronously Insert document into MongoDB within active transaction session
         """
