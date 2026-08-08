@@ -12,19 +12,15 @@ logger = logging.getLogger(__name__)
 
 
 class AWSSESEmailAdapter(EmailPort):
-    def __init__(self, aws_access_key_id: str, aws_secret_access_key: str, aws_region: str, sender_email: str):
+    def __init__(self, aws_region: str, sender_email: str):
         """
         Initialize AWS SES client
         """
-        self.aws_access_key_id = aws_access_key_id
-        self.aws_secret_access_key = aws_secret_access_key
         self.aws_region = aws_region
         self.sender_email = sender_email
 
         # Create async session aioboto3
         self.session = aioboto3.Session(
-            aws_access_key_id=self.aws_access_key_id,
-            aws_secret_access_key=self.aws_secret_access_key,
             region_name=self.aws_region,
         )
 

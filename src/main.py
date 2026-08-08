@@ -30,8 +30,6 @@ async def main():
     # 2. Instantiate Adapters
     db_repository = MongoNotificationRepository(db_client, settings.MONGO_DB)
     email_adapter = AWSSESEmailAdapter(
-        aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
-        aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
         aws_region=settings.AWS_REGION,
         sender_email=settings.AWS_SES_SENDER,
     )

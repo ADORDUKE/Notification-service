@@ -19,8 +19,6 @@ class Settings(BaseSettings):
     RABBIT_PASS: str
     QUEUE_NAME: str
 
-    AWS_ACCESS_KEY_ID: str
-    AWS_SECRET_ACCESS_KEY: str
     AWS_REGION: str
     AWS_SES_SENDER: str
 
