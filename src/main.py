@@ -29,12 +29,14 @@ async def main():
 
     # 2. Instantiate Adapters
     db_repository = MongoNotificationRepository(db_client, settings.MONGO_DB)
+
+    # Initialization sending message through Amazon
     email_adapter = AWSSESEmailAdapter(
         aws_region=settings.AWS_REGION,
         sender_email=settings.AWS_SES_SENDER,
     )
 
-    # 3. Instantiate Use Case
+    # 3. Instantiate Use Case(Dependency Injection)
     use_case = SendResetPasswordNotificationUseCase(
         db_client=db_client, db_name=settings.MONGO_DB, db_repository=db_repository, email_adapter=email_adapter
     )
